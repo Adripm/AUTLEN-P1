@@ -11,8 +11,8 @@ from automata.utils import AutomataFormat
 class TestEvaluatorBase(ABC, unittest.TestCase):
     """Base class for string acceptance tests."""
 
-    automaton: FiniteAutomaton
-    evaluator: FiniteAutomatonEvaluator
+    # automaton: FiniteAutomaton
+    # evaluator: FiniteAutomatonEvaluator
 
     @abstractmethod
     def _create_automata(self) -> FiniteAutomaton:
