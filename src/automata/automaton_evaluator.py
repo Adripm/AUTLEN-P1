@@ -12,8 +12,11 @@ class FiniteAutomatonEvaluator(
     """Evaluator of an automaton."""
 
     def process_symbol(self, symbol: str) -> None:
-        # If this symbol can be processed by any of the states, it does, else return
+        # If this symbol can be processed by any of the states, it does, else raises an Exception
         new_states: Set[_State] = set()
+
+        if symbol not in self.automaton.symbols:
+            raise ValueError("Symbol \'"+(symbol)+"\' is not accepted by this automaton. Accepted symbols: "+str(self.automaton.symbols))
 
         for transition in self.automaton.transitions:
             if transition.initial_state in self.current_states and transition.symbol == symbol and transition.final_state not in new_states:
