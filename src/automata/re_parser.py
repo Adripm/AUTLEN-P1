@@ -112,8 +112,33 @@ class REParser(AbstractREParser):
         automaton1: FiniteAutomaton,
         automaton2: FiniteAutomaton,
     ) -> FiniteAutomaton:
-        # raise NotImplementedError("This method must be implemented.")
-        return None
+
+        states: Collection[State] = automaton1.states.update(automaton2.states)
+        symbols: Collection[str] = automaton1.symbols.update(automaton2.symbols)
+        transitions: Collection[Transition] = automaton1.transitions.update(automaton2.transitions)
+
+        # Add new initial and final states
+        new_initial = State(name=self._add_state(), is_final=False)
+        new_final = State(name=self._add_state(), is_final=True)
+        states.add(new_initial)
+        states.add(new_final)
+
+        # Connect initial state
+        transitions.add(Transition(initial_state=new_initial, symbol=None, final_state=automaton1.initial_state))
+        transitions.add(Transition(initial_state=new_initial, symbol=None, final_state=automaton2.initial_state))
+
+        # Connect final state
+        for state in states:
+            if states.is_final and state is not new_final:
+                state.is_final = False
+                transitions.add(Transition(initial_state=state, symbol=None, final_state=new_final))
+
+        return FiniteAutomaton(
+            initial_state = initial_state,
+            states = states,
+            symbols = symbols,
+            transitions = transitions
+        )
 
     def _create_automaton_concat(
         self,
