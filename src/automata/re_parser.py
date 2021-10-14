@@ -120,5 +120,22 @@ class REParser(AbstractREParser):
         automaton1: FiniteAutomaton,
         automaton2: FiniteAutomaton,
     ) -> FiniteAutomaton:
-        # raise NotImplementedError("This method must be implemented.")
-        return None
+
+        initial_state = automaton1.initial_state
+
+        states: Collection[State] = automaton1.states.update(automaton2.states)
+        symbols: Collection[str] = automaton1.symbols.update(automaton2.symbols)
+        transitions: Collection[Transition] = automaton1.transitions.update(automaton2.transitions)
+
+        # For each final state in automaton1, add lambda transition to initial state in automaton2
+        for state in states:
+            if state.is_final and state in automaton1.states:
+                state.is_final = False
+                transitions.add(Transition(initial_state=state, symbol=None, final_state=automaton2.initial_state))
+
+        return FiniteAutomaton(
+            initial_state = initial_state,
+            states = states,
+            symbols = symbols,
+            transitions = transitions
+        )
