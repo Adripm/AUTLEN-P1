@@ -46,11 +46,17 @@ class FiniteAutomaton(
         )
 
         # Add here additional initialization code.
-        # Do not change the constructor interface.
+        # Do not change the constructor interface
 
-    def to_deterministic(
+
+##EJER 3: editar solo este metodo (se pueden crear metodos adicionales para los calculos)
+                          ##Reutilizar codigo del evaluator
+                          ##Incluir estado sumidero
+    def to_deterministic( 
         self,
     ) -> "FiniteAutomaton":
+        
+        
         raise NotImplementedError("This method must be implemented.")
 
     def to_minimized(

@@ -80,5 +80,17 @@ class TestREParser(unittest.TestCase):
         self._check_accept(evaluator, "3,7,12", should_accept=False)
 
 
+    def test_symbol(self) -> None:
+        """Test one symbol expresions."""
+        evaluator = self._create_evaluator("a")
+
+        self._check_accept(evaluator, "a", should_accept=True)
+        self._check_accept(evaluator, "", should_accept=False)
+    
+    def test_lambda(self) -> None:
+        """Test Lambda only expressions"""
+        evaluator=self._create_evaluator("")
+
+        self._check_accept(evaluator, "", should_accept=True) 
 if __name__ == "__main__":
     unittest.main()
