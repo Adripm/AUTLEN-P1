@@ -1,6 +1,8 @@
 """Automaton implementation."""
 from typing import Collection
 
+from queue import Queue
+
 from automata.interfaces import (
     AbstractFiniteAutomaton,
     AbstractState,
@@ -48,16 +50,44 @@ class FiniteAutomaton(
         # Add here additional initialization code.
         # Do not change the constructor interface
 
-
-##EJER 3: editar solo este metodo (se pueden crear metodos adicionales para los calculos)
-                          ##Reutilizar codigo del evaluator
-                          ##Incluir estado sumidero
-    def to_deterministic( 
+    ## TODO: Incluir estado sumidero ?
+    def to_deterministic(
         self,
     ) -> "FiniteAutomaton":
-        
-        
-        raise NotImplementedError("This method must be implemented.")
+        # AFN-l to AFD
+
+        raise NotImplementedError('TODO: fix')
+
+        symbols: Collection[str] = self.symbols
+        states: Collection[State] = tuple() # Empty tuple
+        transitions: Collection[Transition] = tuple()
+
+        queue = Queue()
+        evaluator = AbstractFiniteAutomatonEvaluator(self)
+
+        initial_state = evaluator.current_states # TODO: current_states is not a state but a set of states
+        queue.put(initial_state)
+        states += (initial_state, )
+
+        while not queue.empty():
+            evaluating_state = queue.get()
+
+            for symbol in symbols:
+                evaluator.current_states = evaluating_state # TODO: FIX - New state is not in initial automaton
+                evaluator.process_symbol(symbol)
+
+                transitions += (Transition(initial_state=evaluating_state, symbol=symbol, final_state=evaluator.current_states), )
+
+                if evaluator.current_states not in states:
+                    states += (evaluator.current_states, )
+                    queue.put(evaluator.current_states, )
+
+        return FiniteAutomaton(
+            initial_state = initial_state,
+            states = states,
+            symbols = symbols,
+            transitions = transitions
+        )
 
     def to_minimized(
         self,

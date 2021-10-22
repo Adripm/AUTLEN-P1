@@ -10,7 +10,7 @@ class REParser(AbstractREParser):
     # Returns the current state count as a string and plus ones
     def _add_state(self) -> str:
         self.state_counter+=1
-        return 'state'+str(self.state_counter-1)
+        return 's'+str(self.state_counter-1)
 
     def _create_automaton_empty(
         self,
