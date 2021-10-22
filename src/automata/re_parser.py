@@ -87,18 +87,18 @@ class REParser(AbstractREParser):
         for state in automaton.states:
             if state.is_final:
                 state.is_final = False
-                transitions.add(Transition(initial_state=state, symbol=None, final_state=final_state))
-                transitions.add(Transition(initial_state=state, symbol=None, final_state=automaton.initial_state))
+                # Tuples are immutable
+                transitions += (Transition(initial_state=state, symbol=None, final_state=final_state), )
+                transitions += (Transition(initial_state=state, symbol=None, final_state=automaton.initial_state), )
 
         # Add new states to automaton
-        states.add(initial_state)
-        states.add(final_state)
+        states += (initial_state, final_state, )
 
         # Add transition from new initial state to inner automaton initial state
-        transitions.add(Transition(initial_state=initial_state, symbol=None, final_state=automaton.initial_state))
+        transitions += (Transition(initial_state=initial_state, symbol=None, final_state=automaton.initial_state), )
 
-        # Add transition from new initial state to final state
-        transitions.add(Transition(initial_state=initial_state, symbol=None, final_state=final_state))
+        # Add transition from new initial state to final
+        transitions += (Transition(initial_state=initial_state, symbol=None, final_state=final_state), )
 
         return FiniteAutomaton(
             initial_state = initial_state,
@@ -113,28 +113,32 @@ class REParser(AbstractREParser):
         automaton2: FiniteAutomaton,
     ) -> FiniteAutomaton:
 
-        states: Collection[State] = automaton1.states.update(automaton2.states)
-        symbols: Collection[str] = automaton1.symbols.update(automaton2.symbols)
-        transitions: Collection[Transition] = automaton1.transitions.update(automaton2.transitions)
+        states: Collection[State] = automaton1.states + automaton2.states
+        transitions: Collection[Transition] = automaton1.transitions + automaton2.transitions
+
+        # Merge symbols list
+        symbols: Collection[str] = automaton1.symbols
+        for item in automaton2.symbols:
+            if item not in automaton1.symbols:
+                symbols += (item, )
 
         # Add new initial and final states
         new_initial = State(name=self._add_state(), is_final=False)
         new_final = State(name=self._add_state(), is_final=True)
-        states.add(new_initial)
-        states.add(new_final)
+        states += (new_initial, new_final, )
 
         # Connect initial state
-        transitions.add(Transition(initial_state=new_initial, symbol=None, final_state=automaton1.initial_state))
-        transitions.add(Transition(initial_state=new_initial, symbol=None, final_state=automaton2.initial_state))
+        transitions += (Transition(initial_state=new_initial, symbol=None, final_state=automaton1.initial_state), )
+        transitions += (Transition(initial_state=new_initial, symbol=None, final_state=automaton2.initial_state), )
 
         # Connect final state
         for state in states:
-            if states.is_final and state is not new_final:
+            if state.is_final and state is not new_final:
                 state.is_final = False
-                transitions.add(Transition(initial_state=state, symbol=None, final_state=new_final))
+                transitions += (Transition(initial_state=state, symbol=None, final_state=new_final), )
 
         return FiniteAutomaton(
-            initial_state = initial_state,
+            initial_state = new_initial,
             states = states,
             symbols = symbols,
             transitions = transitions
@@ -148,15 +152,20 @@ class REParser(AbstractREParser):
 
         initial_state = automaton1.initial_state
 
-        states: Collection[State] = automaton1.states.update(automaton2.states)
-        symbols: Collection[str] = automaton1.symbols.update(automaton2.symbols)
-        transitions: Collection[Transition] = automaton1.transitions.update(automaton2.transitions)
+        states: Collection[State] = automaton1.states + automaton2.states
+        transitions: Collection[Transition] = automaton1.transitions + automaton2.transitions
+
+        # Merge symbols list
+        symbols: Collection[str] = automaton1.symbols
+        for item in automaton2.symbols:
+            if item not in automaton1.symbols:
+                symbols += (item, )
 
         # For each final state in automaton1, add lambda transition to initial state in automaton2
         for state in states:
             if state.is_final and state in automaton1.states:
                 state.is_final = False
-                transitions.add(Transition(initial_state=state, symbol=None, final_state=automaton2.initial_state))
+                transitions += (Transition(initial_state=state, symbol=None, final_state=automaton2.initial_state), )
 
         return FiniteAutomaton(
             initial_state = initial_state,
