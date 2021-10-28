@@ -13,7 +13,7 @@ class FiniteAutomatonEvaluator(
 
     def process_symbol(self, symbol: str) -> None:
         # If this symbol can be processed by any of the states, it does, else raises an Exception
-        new_states: Set[_State] = set()
+        new_states: Set[State] = set()
 
         if symbol not in self.automaton.symbols:
             raise ValueError("Symbol \'"+(symbol)+"\' is not accepted by this automaton. Accepted symbols: "+str(self.automaton.symbols))

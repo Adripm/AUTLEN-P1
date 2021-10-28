@@ -1,7 +1,7 @@
 """Conversion from regex to automata."""
 from automata.automaton import FiniteAutomaton, State, Transition
 from automata.re_parser_interfaces import AbstractREParser
-
+from typing import Collection
 
 class REParser(AbstractREParser):
     """Class for processing regular expressions in Kleene's syntax."""

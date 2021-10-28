@@ -7,10 +7,8 @@ from automata.interfaces import (
     AbstractFiniteAutomaton,
     AbstractState,
     AbstractTransition,
+    AbstractFiniteAutomatonEvaluator,
 )
-
-
-
 
 
 class State(AbstractState):
@@ -56,14 +54,14 @@ class FiniteAutomaton(
     ) -> "FiniteAutomaton":
         # AFN-l to AFD
 
-        raise NotImplementedError('TODO: fix')
+        #raise NotImplementedError('TODO: fix')
 
         symbols: Collection[str] = self.symbols
         states: Collection[State] = tuple() # Empty tuple
         transitions: Collection[Transition] = tuple()
 
         queue = Queue()
-        evaluator = AbstractFiniteAutomatonEvaluator(self)
+        evaluator = AbstractFiniteAutomatonEvaluator[self]
 
         initial_state = evaluator.current_states # TODO: current_states is not a state but a set of states
         queue.put(initial_state)
