@@ -75,6 +75,10 @@ class FiniteAutomaton(
         initial_states = evaluator.current_states
         queue.put(initial_states)
 
+        # Add initial state to states
+        merged_initial_state = merge_states(initial_states)
+        states += (merged_initial_state, )
+
         while not queue.empty():
             evaluating_states = queue.get() # Set of states
             merged_evaluating_state = merge_states(evaluating_states)
@@ -92,7 +96,7 @@ class FiniteAutomaton(
                     queue.put(evaluator.current_states, )
 
         return FiniteAutomaton(
-            initial_state = merge_states(initial_states),
+            initial_state = merged_initial_state,
             states = states,
             symbols = symbols,
             transitions = transitions
