@@ -3,7 +3,7 @@ import unittest
 from abc import ABC
 
 from automata.automaton import FiniteAutomaton
-from automata.utils import AutomataFormat, deterministic_automata_isomorphism
+from automata.utils import AutomataFormat, deterministic_automata_isomorphism, write_dot
 
 
 class TestTransform(ABC, unittest.TestCase):
@@ -16,6 +16,9 @@ class TestTransform(ABC, unittest.TestCase):
     ) -> None:
         """Test that the transformed automaton is as the expected one."""
         transformed = automaton.to_deterministic()
+
+        print(write_dot(transformed))
+
         equiv_map = deterministic_automata_isomorphism(
             expected,
             transformed,
@@ -60,6 +63,8 @@ class TestTransform(ABC, unittest.TestCase):
         # Falla porque el automata devuelto por to_deterministic tiene un estado con nombre ''. Se espera como nombre 'empty'
 
         expected = AutomataFormat.read(expected_str)
+
+        print(write_dot(automaton)) # Expected
 
         self._check_transform(automaton, expected)
 

@@ -57,6 +57,9 @@ class FiniteAutomaton(
 
         # Auxiliar function
         def merge_states(states: Collection[State]) -> State:
+            if len(states) <= 0:
+                return State(name='empty', is_final=False)
+
             name = ''
             is_final = False
             for state in states:
