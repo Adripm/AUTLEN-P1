@@ -7,7 +7,6 @@ from automata.interfaces import (
     AbstractFiniteAutomaton,
     AbstractState,
     AbstractTransition,
-    AbstractFiniteAutomatonEvaluator,
 )
 
 
@@ -54,34 +53,46 @@ class FiniteAutomaton(
     ) -> "FiniteAutomaton":
         # AFN-l to AFD
 
-        #raise NotImplementedError('TODO: fix')
+        from automata.automaton_evaluator import FiniteAutomatonEvaluator
+
+        # Auxiliar function
+        def merge_states(states: Collection[State]) -> State:
+            name = ''
+            is_final = False
+            for state in states:
+                name += state.name
+                if state.is_final:
+                    is_final = True
+            return State(name=name, is_final=is_final)
 
         symbols: Collection[str] = self.symbols
         states: Collection[State] = tuple() # Empty tuple
         transitions: Collection[Transition] = tuple()
 
         queue = Queue()
-        evaluator = AbstractFiniteAutomatonEvaluator[self]
+        evaluator = FiniteAutomatonEvaluator(self)
 
-        initial_state = evaluator.current_states # TODO: current_states is not a state but a set of states
-        queue.put(initial_state)
-        states += (initial_state, )
+        initial_states = evaluator.current_states
+        queue.put(initial_states)
 
         while not queue.empty():
-            evaluating_state = queue.get()
+            evaluating_states = queue.get() # Set of states
+            merged_evaluating_state = merge_states(evaluating_states)
 
             for symbol in symbols:
-                evaluator.current_states = evaluating_state # TODO: FIX - New state is not in initial automaton
+                evaluator.current_states = evaluating_states
                 evaluator.process_symbol(symbol)
 
-                transitions += (Transition(initial_state=evaluating_state, symbol=symbol, final_state=evaluator.current_states), )
+                merged_final_state = merge_states(evaluator.current_states)
 
-                if evaluator.current_states not in states:
-                    states += (evaluator.current_states, )
+                transitions += (Transition(initial_state=merged_evaluating_state, symbol=symbol, final_state=merged_final_state), )
+
+                if merged_final_state not in states:
+                    states += (merged_final_state, )
                     queue.put(evaluator.current_states, )
 
         return FiniteAutomaton(
-            initial_state = initial_state,
+            initial_state = merge_states(initial_states),
             states = states,
             symbols = symbols,
             transitions = transitions
