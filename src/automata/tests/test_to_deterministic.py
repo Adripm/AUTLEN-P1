@@ -56,6 +56,9 @@ class TestTransform(ABC, unittest.TestCase):
 
         """
 
+        # TODO: Fix
+        # Falla porque el automata devuelto por to_deterministic tiene un estado con nombre ''. Se espera como nombre 'empty'
+
         expected = AutomataFormat.read(expected_str)
 
         self._check_transform(automaton, expected)
