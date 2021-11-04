@@ -89,13 +89,19 @@ class FiniteAutomaton(
 
                 new_state_tuple = (evaluator.current_states, merge_states(evaluator.current_states), )
 
-                # Add transition
-                transitions += (Transition(initial_state=state_tuple[1], symbol=symbol, final_state=new_state_tuple[1]),)
-
-                # If state not in states, add it
                 if new_state_tuple[1] not in states:
+                    # If state not in states, add it
                     states += (new_state_tuple[1], )
                     queue.put(new_state_tuple)
+                    # Add transition into new state
+                    transitions += (Transition(initial_state=state_tuple[1], symbol=symbol, final_state=new_state_tuple[1]),)
+                else:
+                    # Add transition into already existing state
+                    # This prevents from creating Transitions into equivalent States which are not the same object in memory
+                    for state in states:
+                        if state == new_state_tuple[1]:
+                            transitions += (Transition(initial_state=state_tuple[1], symbol=symbol, final_state=state), )
+                            break
 
         return FiniteAutomaton(
             initial_state = states[0],

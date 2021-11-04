@@ -18,10 +18,10 @@ class TestTransform(ABC, unittest.TestCase):
         transformed = automaton.to_deterministic()
 
         # DEBUG PURPOSES
-        # with open('expected.txt', 'w') as file:
-        #     file.write(write_dot(expected))
-        # with open('result.txt', 'w') as file:
-        #     file.write(write_dot(transformed))
+        with open('expected.txt', 'w') as file:
+            file.write(write_dot(expected))
+        with open('result.txt', 'w') as file:
+            file.write(write_dot(transformed))
 
         equiv_map = deterministic_automata_isomorphism(
             expected,
