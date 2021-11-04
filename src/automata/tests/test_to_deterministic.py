@@ -17,7 +17,11 @@ class TestTransform(ABC, unittest.TestCase):
         """Test that the transformed automaton is as the expected one."""
         transformed = automaton.to_deterministic()
 
-        print(write_dot(transformed))
+        # DEBUG PURPOSES
+        # with open('expected.txt', 'w') as file:
+        #     file.write(write_dot(expected))
+        # with open('result.txt', 'w') as file:
+        #     file.write(write_dot(transformed))
 
         equiv_map = deterministic_automata_isomorphism(
             expected,
@@ -60,11 +64,8 @@ class TestTransform(ABC, unittest.TestCase):
         """
 
         # TODO: Fix
-        # Falla porque el automata devuelto por to_deterministic tiene un estado con nombre ''. Se espera como nombre 'empty'
 
         expected = AutomataFormat.read(expected_str)
-
-        print(write_dot(automaton)) # Expected
 
         self._check_transform(automaton, expected)
 

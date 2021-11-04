@@ -75,31 +75,30 @@ class FiniteAutomaton(
         queue = Queue()
         evaluator = FiniteAutomatonEvaluator(self)
 
-        initial_states = evaluator.current_states
-        queue.put(initial_states)
-
-        # Add initial state to states
-        merged_initial_state = merge_states(initial_states)
-        states += (merged_initial_state, )
+        # Queue will hold tuples of set of states and correspondant merged state
+        state_tuple = (evaluator.current_states, merge_states(evaluator.current_states),)
+        states += (state_tuple[1], )
+        queue.put(state_tuple)
 
         while not queue.empty():
-            evaluating_states = queue.get() # Set of states
-            merged_evaluating_state = merge_states(evaluating_states)
+            state_tuple = queue.get()
 
             for symbol in symbols:
-                evaluator.current_states = evaluating_states
+                evaluator.current_states = state_tuple[0]
                 evaluator.process_symbol(symbol)
 
-                merged_final_state = merge_states(evaluator.current_states)
+                new_state_tuple = (evaluator.current_states, merge_states(evaluator.current_states), )
 
-                transitions += (Transition(initial_state=merged_evaluating_state, symbol=symbol, final_state=merged_final_state), )
+                # Add transition
+                transitions += (Transition(initial_state=state_tuple[1], symbol=symbol, final_state=new_state_tuple[1]),)
 
-                if merged_final_state not in states:
-                    states += (merged_final_state, )
-                    queue.put(evaluator.current_states, )
+                # If state not in states, add it
+                if new_state_tuple[1] not in states:
+                    states += (new_state_tuple[1], )
+                    queue.put(new_state_tuple)
 
         return FiniteAutomaton(
-            initial_state = merged_initial_state,
+            initial_state = states[0],
             states = states,
             symbols = symbols,
             transitions = transitions
