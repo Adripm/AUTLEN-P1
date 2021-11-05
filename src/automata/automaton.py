@@ -113,4 +113,67 @@ class FiniteAutomaton(
     def to_minimized(
         self,
     ) -> "FiniteAutomaton":
-        raise NotImplementedError("This method must be implemented.")
+    #Minimize AFDWW
+
+        from automata.automaton_evaluator import FiniteAutomatonEvaluator
+
+        symbols: Collection[str] = self.symbols
+        states: Collection[State] = tuple()
+        transitions: Collection[Transition] = tuple()
+        
+        #Se recorre el autómata y se guardan los estados transitados en un auxiliar.
+        #Este se compara con el inicial para detectar los estados inaccesibles y eliminarlos.
+        queue = Queue()
+        evaluator = FiniteAutomatonEvaluator(self)
+
+        queue.put(evaluator.current_states[0])
+
+        while not queue.empty():
+            state = queue.get()
+            
+            if state not in states:
+                states += (state,)
+
+                for symbol in symbols:
+                    evaluator.proccess_symbol(symbol)
+                    transitions += (Transition(initial_state=state, symbol=symbol, final_state=evaluator.current_states[0]),)
+
+                    queue.put(evaluator.current_states[0])
+
+        # Minimize symbols
+        symbols = tuple()
+        for transition in transitions:
+            if transition.symbol not in symbols:
+                symbols += (transition.symbol,)
+        # States, transitions and symbols should be complete
+
+        # Estados equivalentes
+        # Construir la primera relación de equivalencia
+        eq = [[], []]
+        for state in states:
+            if state.is_final:
+                eq[1].append(state)
+            else:
+                eq[0].append(state)
+
+        new_eq = None
+        while True:
+            # Calcular nueva relación de equivalencia new_eq
+            for eq_class in eq:
+                # All possible combinations of two items for eq_class
+                pairs = [(a,b) for idx, a in enumerate(eq_class) for b in eq_class[idx + 1:]]
+                for pair in pairs:
+                    pass
+                    # Comparar si son indistinguibles
+                    # Si lo son, crear una nueva clase de equivalencia
+
+            if new_eq == eq:
+                break
+            eq = new_eq
+
+        return FiniteAutomaton(
+            initial_state=None,
+            states=None,
+            symbols=None,
+            transitions=None
+        )
