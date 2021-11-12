@@ -113,63 +113,90 @@ class FiniteAutomaton(
     def to_minimized(
         self,
     ) -> "FiniteAutomaton":
-    #Minimize AFDWW
+        #Minimize AFD
 
         from automata.automaton_evaluator import FiniteAutomatonEvaluator
 
-        symbols: Collection[str] = self.symbols
-        states: Collection[State] = tuple()
-        transitions: Collection[Transition] = tuple()
-        
-        #Se recorre el autómata y se guardan los estados transitados en un auxiliar.
-        #Este se compara con el inicial para detectar los estados inaccesibles y eliminarlos.
-        queue = Queue()
         evaluator = FiniteAutomatonEvaluator(self)
 
-        queue.put(evaluator.current_states[0])
+        symbols: Collection[str] = tuple()
+        states: Collection[State] = tuple()
+        transitions: Collection[Transition] = tuple()
 
-        while not queue.empty():
-            state = queue.get()
-            
-            if state not in states:
-                states += (state,)
-
-                for symbol in symbols:
-                    evaluator.proccess_symbol(symbol)
-                    transitions += (Transition(initial_state=state, symbol=symbol, final_state=evaluator.current_states[0]),)
-
-                    queue.put(evaluator.current_states[0])
-
-        # Minimize symbols
-        symbols = tuple()
-        for transition in transitions:
-            if transition.symbol not in symbols:
-                symbols += (transition.symbol,)
-        # States, transitions and symbols should be complete
-
-        # Estados equivalentes
-        # Construir la primera relación de equivalencia
-        eq = [[], []]
-        for state in states:
-            if state.is_final:
-                eq[1].append(state)
+        # Construir primera clase de equivalencia
+        eq = list()
+        for state in self.states:
+            if states.is_final:
+                eq.append(1)
             else:
-                eq[0].append(state)
+                eq.append(0)
 
-        new_eq = None
+        n_states = len(eq)
+
         while True:
-            # Calcular nueva relación de equivalencia new_eq
-            for eq_class in eq:
-                # All possible combinations of two items for eq_class
-                pairs = [(a,b) for idx, a in enumerate(eq_class) for b in eq_class[idx + 1:]]
-                for pair in pairs:
-                    pass
-                    # Comparar si son indistinguibles
-                    # Si lo son, crear una nueva clase de equivalencia
+            new_eq = [None for _ in range(n_states)] # List containing n_states 'None' items
 
-            if new_eq == eq:
-                break
-            eq = new_eq
+            # Identificar inicio de clase
+            eqclasses = list(set(eq)) # List of all unique classes present
+            n_classes = len(eqclasses)
+            expected = list() # List of expected results after transition for each equivalence class and symbol
+            for eqclass,index in eq:
+                if eqclass in eqclasses:
+                    eqclasses.remove(eqclass)
+                    new_eq[index] = eqclass
+
+                    # Calculate expected results
+                    state = self.states[index]
+                    result = list()
+                    for symbol in self.symbols:
+                        evaluator.current_states = set(state)
+                        evaluator.process_symbol(symbol)
+                        result.append(eq[self.states.index(evaluator.current_states[0])])
+
+                    expected.append(result)
+
+            # for class, for state, comprobar si continuan en la misma clase
+            for eqclass,index in new_eq:
+                if eqclass is None:
+                    expected_eqclass = eq[index]
+                    expected_transition = expected[expected_eqclass]
+
+                    # Calculate transition and compare with expected results
+                    state = self.states[index]
+                    result = list()
+                    for symbol in self.symbols:
+                        evaluator.current_states = set(state)
+                        evaluator.process_symbol(symbol)
+                        result.append(eq[self.states.index(evaluator.current_states[0])])
+
+                    if result == expected_transition:
+                        new_eq[index] = expected_eqclass
+                    # else, remains empty
+
+            # crear nuevas clases
+            new_class = n_classes
+            for cls,index in new_eq: # set all to new class
+                if cls is None:
+                    new_eq[index] = new_class
+
+            flag = True
+            while flag: # analizar nueva clase
+                flag = False # will be set to true whenever a new class is created
+                first = True # flag for determining if a class is the first found of its kind
+
+                for eqclass,index in new_eq:
+                    if eqclass == new_class:
+                        if first:   # calculate expected class transitions
+                            first = False # TODO
+                        else:       # compare resulting transitions with expected
+                            pass    # TODO
+
+            if eq == new_eq:
+                break # break loop
+            else:
+                eq = new_eq # continue
+
+        # Clases de equivalencia completas
 
         return FiniteAutomaton(
             initial_state=None,
