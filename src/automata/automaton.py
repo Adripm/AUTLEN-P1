@@ -9,6 +9,18 @@ from automata.interfaces import (
     AbstractTransition,
 )
 
+# Auxiliar function
+def merge_states(states: Collection[State]) -> State:
+    if len(states) <= 0:
+        return State(name='empty', is_final=False)
+
+    name = ''
+    is_final = False
+    for state in states:
+        name += state.name
+        if state.is_final:
+            is_final = True
+    return State(name=name, is_final=is_final)
 
 class State(AbstractState):
     """State of an automaton."""
@@ -47,26 +59,12 @@ class FiniteAutomaton(
         # Add here additional initialization code.
         # Do not change the constructor interface
 
-    ## TODO: Incluir estado sumidero ?
     def to_deterministic(
         self,
     ) -> "FiniteAutomaton":
         # AFN-l to AFD
 
         from automata.automaton_evaluator import FiniteAutomatonEvaluator
-
-        # Auxiliar function
-        def merge_states(states: Collection[State]) -> State:
-            if len(states) <= 0:
-                return State(name='empty', is_final=False)
-
-            name = ''
-            is_final = False
-            for state in states:
-                name += state.name
-                if state.is_final:
-                    is_final = True
-            return State(name=name, is_final=is_final)
 
         symbols: Collection[str] = self.symbols
         states: Collection[State] = tuple() # Empty tuple
@@ -115,6 +113,8 @@ class FiniteAutomaton(
     ) -> "FiniteAutomaton":
         #Minimize AFD
 
+        # TODO: reducir repetición de código
+
         from automata.automaton_evaluator import FiniteAutomatonEvaluator
 
         evaluator = FiniteAutomatonEvaluator(self)
@@ -132,6 +132,7 @@ class FiniteAutomaton(
                 eq.append(0)
 
         n_states = len(eq)
+        expected = None
 
         while True:
             new_eq = [None for _ in range(n_states)] # List containing n_states 'None' items
@@ -207,11 +208,34 @@ class FiniteAutomaton(
             else:
                 eq = new_eq # continue
 
+        # eq == new_eq
         # Clases de equivalencia completas
+        # Construir nuevo autómata
+
+        # Crear clases a partir de clases de equivalencia
+        for unique_class in sorted(set(eq)):
+            for eqclass,index in eq:
+                to_merge = tuple()
+
+                if unique_class == eqclass:
+                    to_merge += (self.states[index],)
+
+            states += (merge_states(to_merge),)
+
+        # Crear transiciones a partir de las transiciones esperadas en la lista 'expected'
+        for ts,ts_index in expected:
+            for symbol,symbol_index in self.symbols:
+                transitions = (Transition(initial_state=states[index], symbol=symbol, final_state=states[ts[symbol_index]]),)
+
+        # Crear simbolos
+        for transition in transitions:
+            if transition.symbol not in symbols:
+                symbols += (transition.symbol,)
+
 
         return FiniteAutomaton(
-            initial_state=None,
-            states=None,
-            symbols=None,
-            transitions=None
+            initial_state=states[0], # should be correspondant to equivalence class 0 since they were added sorted in order
+            states=states,
+            symbols=symbols,
+            transitions=transitions
         )
