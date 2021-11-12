@@ -174,22 +174,33 @@ class FiniteAutomaton(
                     # else, remains empty
 
             # crear nuevas clases
-            new_class = n_classes
-            for cls,index in new_eq: # set all to new class
-                if cls is None:
-                    new_eq[index] = new_class
+            while None in new_eq:
+                new_class = n_classes
+                n_classes += 1
 
-            flag = True
-            while flag: # analizar nueva clase
-                flag = False # will be set to true whenever a new class is created
-                first = True # flag for determining if a class is the first found of its kind
+                index = new_eq.index(None)
+                new_eq[index] = new_class
 
-                for eqclass,index in new_eq:
-                    if eqclass == new_class:
-                        if first:   # calculate expected class transitions
-                            first = False # TODO
-                        else:       # compare resulting transitions with expected
-                            pass    # TODO
+                # Expected class transition
+                state = self.states[index]
+                result = list()
+                for symbol in self.symbols:
+                    evaluator.current_states = set(state)
+                    evaluator.process_symbol(symbol)
+                    result.append(eq[self.states.index(evaluator.current_states[0])])
+                expected.append(result)
+
+                for eqclass,n_class in new_eq:
+                    if eqclass is None:
+                        # Check if matches expected transitions from new class
+                        result = list()
+                        for symbol in self.symbols:
+                            evaluator.current_states = set(self.states[n_class])
+                            evaluator.process_symbol(symbol)
+                            result.append(eq[self.states.index(evaluator.current_states[0])])
+
+                        if result == expected[-1]: # last element added to expected list will always be the new class
+                            new_eq[n_class] = new_class
 
             if eq == new_eq:
                 break # break loop
