@@ -6,6 +6,7 @@ from automata.automaton import FiniteAutomaton
 from automata.utils import AutomataFormat, deterministic_automata_isomorphism, write_dot
 import inspect
 import os
+import sys
 
 class TestMinimize(ABC, unittest.TestCase):
     """Base class for string acceptance tests."""
@@ -48,7 +49,7 @@ class TestMinimize(ABC, unittest.TestCase):
             transformed,
         )
 
-        self._dot(automaton, transformed)
+        self._dot(automaton, transformed) # Enable to generate images
 
         self.assertTrue(equiv_map is not None)
 
@@ -93,14 +94,197 @@ class TestMinimize(ABC, unittest.TestCase):
 
         self._check_transform(automaton, expected)
 
-    # def test_case2(self) -> None:
-    #     pass
-    #
-    # def test_case3(self) -> None:
-    #     pass
-    #
-    # def test_case4(self) -> None:
-    #     pass
+    def test_case2(self) -> None:
+        automaton_str="""
+        Automaton:
+            Symbols: 01
+
+            q0
+            q1
+            q2
+            q3 final
+
+            --> q0
+            q0 -0-> q1
+            q1 -0-> q2
+            q2 -0-> q1
+            q1 -0-> q0
+
+            q1 -1-> q1
+
+            q0 -1-> q3
+            q2 -1-> q3
+
+            q3 -0-> q3
+            q3 -1-> q3
+        """
+
+        expected_str="""
+        Automaton:
+            Symbols: 01
+
+            q0
+            q1
+            q2 final
+
+            --> q0
+            q0 -0-> q1
+            q0 -1-> q2
+
+            q1 -0-> q0
+            q1 -1-> q1
+
+            q2 -0-> q2
+            q2 -1-> q2
+        """
+
+        automaton = AutomataFormat.read(automaton_str)
+        expected = AutomataFormat.read(expected_str)
+
+        self._check_transform(automaton, expected)
+
+    def test_case3(self) -> None:
+        automaton_str = """
+        Automaton:
+            Symbols: 01
+
+            q0
+            q1
+            q2
+            q3
+            q4 final
+            q5 final
+
+            --> q0
+            q0 -0-> q1
+            q0 -1-> q2
+
+            q1 -0-> q3
+            q1 -1-> q4
+
+            q2 -0-> q3
+            q2 -1-> q5
+
+            q3 -0-> q3
+            q3 -1-> q3
+
+            q4 -0-> q4
+            q4 -1-> q4
+
+            q5 -0-> q5
+            q5 -1-> q5
+        """
+
+        expected_str = """
+        Automaton:
+            Symbols: 01
+
+            q0
+            q1
+            q2
+            q3 final
+
+            --> q0
+            q0 -0-> q1
+            q0 -1-> q1
+
+            q1 -0-> q2
+            q1 -1-> q3
+
+            q2 -0-> q2
+            q2 -1-> q2
+
+            q3 -0-> q3
+            q3 -1-> q3
+        """
+
+        automaton = AutomataFormat.read(automaton_str)
+        expected = AutomataFormat.read(expected_str)
+
+        self._check_transform(automaton, expected)
+
+    def test_case4(self) -> None:
+        automaton_str = """
+        Automaton:
+            Symbols: 01
+
+            q0
+            q1
+            q2
+            q3 final
+
+            --> q0
+            q0 -0-> q1
+            q1 -0-> q2
+            q2 -0-> q3
+
+            q0 -1-> q0
+            q1 -1-> q1
+            q2 -1-> q2
+            q3 -1-> q3
+        """
+
+        automaton = AutomataFormat.read(automaton_str)
+
+        self._check_transform(automaton, automaton) # minimized version is the same
+
+    def test_case5(self) -> None:
+        automaton_str = """
+        Automaton:
+            Symbols: 01
+
+            q0
+            q1
+            q2 final
+            q3 final
+            q4 final
+            q5
+
+            --> q0
+
+            q0 -0-> q1
+            q0 -1-> q2
+
+            q1 -0-> q0
+            q1 -1-> q3
+
+            q2 -0-> q4
+            q2 -1-> q5
+
+            q3 -0-> q4
+            q3 -1-> q5
+
+            q4 -0-> q4
+            q4 -1-> q5
+
+            q5 -0-> q5
+            q5 -1-> q5
+        """
+
+        expected_str = """
+        Automaton:
+            Symbols: 01
+
+            q0
+            q1 final
+            q2
+
+            --> q0
+
+            q0 -0-> q0
+            q0 -1-> q1
+
+            q1 -0-> q1
+            q1 -1-> q2
+
+            q2 -0-> q2
+            q2 -1-> q2
+        """
+
+        automaton = AutomataFormat.read(automaton_str)
+        expected = AutomataFormat.read(expected_str)
+
+        self._check_transform(automaton, expected)
 
 if __name__ == '__main__':
     unittest.main()

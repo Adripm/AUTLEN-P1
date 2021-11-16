@@ -189,7 +189,7 @@ class FiniteAutomaton(
                     # else, does not remain in class
 
             # next_class = len(unique_eqclasses)
-            while None in new_eq:
+            while None in new_eq.values():
                 first = None
                 for s,cls in new_eq.items():
                     if cls is None:

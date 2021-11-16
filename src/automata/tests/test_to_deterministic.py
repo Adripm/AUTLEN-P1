@@ -40,13 +40,13 @@ class TestTransform(ABC, unittest.TestCase):
     ) -> None:
         """Test that the transformed automaton is as the expected one."""
         transformed = automaton.to_deterministic()
-        
+
         equiv_map = deterministic_automata_isomorphism(
             expected,
             transformed,
         )
 
-        self.dot(automaton, transformed)
+        # self.dot(automaton, transformed) # Enable to generate images
 
         self.assertTrue(equiv_map is not None)
 
