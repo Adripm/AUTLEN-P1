@@ -4,7 +4,9 @@ from abc import ABC
 
 from automata.automaton import FiniteAutomaton
 from automata.utils import AutomataFormat, deterministic_automata_isomorphism, write_dot
-
+import os
+import sys
+import inspect
 
 class TestTransform(ABC, unittest.TestCase):
     """Base class for string acceptance tests."""
@@ -46,7 +48,7 @@ class TestTransform(ABC, unittest.TestCase):
             transformed,
         )
 
-        # self.dot(automaton, transformed) # Enable to generate images
+        # self._dot(automaton, transformed) # Enable to generate images
 
         self.assertTrue(equiv_map is not None)
 

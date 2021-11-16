@@ -49,7 +49,7 @@ class TestMinimize(ABC, unittest.TestCase):
             transformed,
         )
 
-        self._dot(automaton, transformed) # Enable to generate images
+        # self._dot(automaton, transformed) # Enable to generate images
 
         self.assertTrue(equiv_map is not None)
 
