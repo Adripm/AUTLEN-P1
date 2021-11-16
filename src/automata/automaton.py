@@ -9,19 +9,6 @@ from automata.interfaces import (
     AbstractTransition,
 )
 
-# Auxiliar function
-def merge_states(states: Collection[State]) -> State:
-    if len(states) <= 0:
-        return State(name='empty', is_final=False)
-
-    name = ''
-    is_final = False
-    for state in states:
-        name += state.name
-        if state.is_final:
-            is_final = True
-    return State(name=name, is_final=is_final)
-
 class State(AbstractState):
     """State of an automaton."""
 
@@ -63,6 +50,19 @@ class FiniteAutomaton(
         self,
     ) -> "FiniteAutomaton":
         # AFN-l to AFD
+
+        # Auxiliar function
+        def merge_states(states: Collection[State]) -> State:
+            if len(states) <= 0:
+                return State(name='empty', is_final=False)
+
+            name = ''
+            is_final = False
+            for state in states:
+                name += state.name
+                if state.is_final:
+                    is_final = True
+            return State(name=name, is_final=is_final)
 
         from automata.automaton_evaluator import FiniteAutomatonEvaluator
 
@@ -113,129 +113,88 @@ class FiniteAutomaton(
     ) -> "FiniteAutomaton":
         #Minimize AFD
 
-        # TODO: reducir repetición de código
-
-        from automata.automaton_evaluator import FiniteAutomatonEvaluator
-
-        evaluator = FiniteAutomatonEvaluator(self)
+        # Minimization Algorithm details
+        #######################################################################
+        # -> build transition table
+        # -> build first equivalence class
+        # -- while neweq != eq:
+        #       -> build specific transition table using equivalence classes
+        #       -> mark start of each class
+        #       -- for each empty in neweq:
+        #               -- if transitions are equal:
+        #                       -> mark in neweq as class
+        #               -- else:
+        #                       -> mark in neweq as empty
+        #       -- while empty in neweq:
+        #               -> create new class
+        #               -> mark first empty as new class in neweq
+        #               -- for each empty in neweq:
+        #                       -- if transitions are equal:
+        #                               -> mark in neweq as class
+        #                       -- else:
+        #                               -> mark in neqew as empty
+        #######################################################################
 
         symbols: Collection[str] = tuple()
         states: Collection[State] = tuple()
         transitions: Collection[Transition] = tuple()
 
-        # Construir primera clase de equivalencia
-        eq = list()
-        for state in self.states:
-            if states.is_final:
-                eq.append(1)
-            else:
-                eq.append(0)
+        # Construir la tabla de transiciones
+        transitions_table = {}
+        for t in self.transitions:
+            if t.initial_state not in transitions_table:
+                transitions_table[t.initial_state] = {}
+            transitions_table[t.initial_state][t.symbol] = t.final_state
 
-        n_states = len(eq)
-        expected = None
+        # Construir primera clase de equivalencia
+        eq = {}
+        for s in self.states:
+            if s.is_final:
+                eq[s] = 1
+            else:
+                eq[s] = 0
+
+        n_states = len(self.states)
 
         while True:
-            new_eq = [None for _ in range(n_states)] # List containing n_states 'None' items
+            # initialize new_eq
+            new_eq = {}
+            for s in self.states:
+                new_eq[s] = None
 
             # Identificar inicio de clase
-            eqclasses = list(set(eq)) # List of all unique classes present
-            n_classes = len(eqclasses)
-            expected = list() # List of expected results after transition for each equivalence class and symbol
-            for eqclass,index in eq:
-                if eqclass in eqclasses:
-                    eqclasses.remove(eqclass)
-                    new_eq[index] = eqclass
+            unique_eqclasses = list(set(eq.values())) # List of all uinque classes present in eq
+            for s,cls in eq.items():
+                if cls in unique_eqclasses:
+                    unique_eqclasses.remove(cls)
+                    new_eq[s] = cls
 
-                    # Calculate expected results
-                    state = self.states[index]
-                    result = list()
-                    for symbol in self.symbols:
-                        evaluator.current_states = set(state)
-                        evaluator.process_symbol(symbol)
-                        result.append(eq[self.states.index(evaluator.current_states[0])])
+            # Calcular tabla de transiciones hacia clases
+            class_transitions_table = {}
+            for s,d in transitions_table.items():
+                class_transitions_table[s] = {}
+                for t,f in d.items():
+                    class_transitions_table[s][t] = eq[f]
 
-                    expected.append(result)
+            # for each empty, check if remains in same class
+            for s,cls in new_eq.items():
+                if cls is None:
+                    # check if remains in class
+                    pass # Continue here
 
-            # for class, for state, comprobar si continuan en la misma clase
-            for eqclass,index in new_eq:
-                if eqclass is None:
-                    expected_eqclass = eq[index]
-                    expected_transition = expected[expected_eqclass]
-
-                    # Calculate transition and compare with expected results
-                    state = self.states[index]
-                    result = list()
-                    for symbol in self.symbols:
-                        evaluator.current_states = set(state)
-                        evaluator.process_symbol(symbol)
-                        result.append(eq[self.states.index(evaluator.current_states[0])])
-
-                    if result == expected_transition:
-                        new_eq[index] = expected_eqclass
-                    # else, remains empty
-
-            # crear nuevas clases
-            while None in new_eq:
-                new_class = n_classes
-                n_classes += 1
-
-                index = new_eq.index(None)
-                new_eq[index] = new_class
-
-                # Expected class transition
-                state = self.states[index]
-                result = list()
-                for symbol in self.symbols:
-                    evaluator.current_states = set(state)
-                    evaluator.process_symbol(symbol)
-                    result.append(eq[self.states.index(evaluator.current_states[0])])
-                expected.append(result)
-
-                for eqclass,n_class in new_eq:
-                    if eqclass is None:
-                        # Check if matches expected transitions from new class
-                        result = list()
-                        for symbol in self.symbols:
-                            evaluator.current_states = set(self.states[n_class])
-                            evaluator.process_symbol(symbol)
-                            result.append(eq[self.states.index(evaluator.current_states[0])])
-
-                        if result == expected[-1]: # last element added to expected list will always be the new class
-                            new_eq[n_class] = new_class
+            break # DEBUG DEBUG DEBUG
 
             if eq == new_eq:
                 break # break loop
             else:
                 eq = new_eq # continue
 
-        # eq == new_eq
         # Clases de equivalencia completas
-        # Construir nuevo autómata
-
-        # Crear clases a partir de clases de equivalencia
-        for unique_class in sorted(set(eq)):
-            for eqclass,index in eq:
-                to_merge = tuple()
-
-                if unique_class == eqclass:
-                    to_merge += (self.states[index],)
-
-            states += (merge_states(to_merge),)
-
-        # Crear transiciones a partir de las transiciones esperadas en la lista 'expected'
-        for ts,ts_index in expected:
-            for symbol,symbol_index in self.symbols:
-                transitions = (Transition(initial_state=states[index], symbol=symbol, final_state=states[ts[symbol_index]]),)
-
-        # Crear simbolos
-        for transition in transitions:
-            if transition.symbol not in symbols:
-                symbols += (transition.symbol,)
 
 
         return FiniteAutomaton(
-            initial_state=states[0], # should be correspondant to equivalence class 0 since they were added sorted in order
-            states=states,
-            symbols=symbols,
-            transitions=transitions
+            initial_state=None,
+            states=None,
+            symbols=None,
+            transitions=None
         )
