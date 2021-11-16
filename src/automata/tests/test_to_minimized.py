@@ -4,9 +4,35 @@ from abc import ABC
 
 from automata.automaton import FiniteAutomaton
 from automata.utils import AutomataFormat, deterministic_automata_isomorphism, write_dot
+import inspect
+import os
 
 class TestMinimize(ABC, unittest.TestCase):
     """Base class for string acceptance tests."""
+
+    def _dot(self, aut, trans):
+        dir = 'dots'
+        imgs = 'imgs'
+
+        testname = inspect.stack()[2][3]
+        classname = self.__class__.__name__
+
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        if not os.path.exists(imgs):
+            os.makedirs(imgs)
+
+        filename1 = dir+'/'+classname+'-'+testname+'-original.txt'
+        filename2 = dir+'/'+classname+'-'+testname+'-result.txt'
+
+        filename3 = imgs+'/'+classname+'-'+testname+'.jpg'
+
+        with open(filename1, 'w') as file:
+            file.write(write_dot(aut))
+        with open(filename2, 'w') as file:
+            file.write(write_dot(trans))
+
+        os.system('gvpack -u '+filename2+' '+filename1+' | dot -Tjpg -o'+filename3)
 
     def _check_transform(
         self,
@@ -21,6 +47,8 @@ class TestMinimize(ABC, unittest.TestCase):
             expected,
             transformed,
         )
+
+        self._dot(automaton, transformed)
 
         self.assertTrue(equiv_map is not None)
 

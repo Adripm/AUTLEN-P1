@@ -9,6 +9,30 @@ from automata.utils import AutomataFormat, deterministic_automata_isomorphism, w
 class TestTransform(ABC, unittest.TestCase):
     """Base class for string acceptance tests."""
 
+    def _dot(self, aut, trans):
+        dir = 'dots'
+        imgs = 'imgs'
+
+        testname = inspect.stack()[2][3]
+        classname = self.__class__.__name__
+
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        if not os.path.exists(imgs):
+            os.makedirs(imgs)
+
+        filename1 = dir+'/'+classname+'-'+testname+'-original.txt'
+        filename2 = dir+'/'+classname+'-'+testname+'-result.txt'
+
+        filename3 = imgs+'/'+classname+'-'+testname+'.jpg'
+
+        with open(filename1, 'w') as file:
+            file.write(write_dot(aut))
+        with open(filename2, 'w') as file:
+            file.write(write_dot(trans))
+
+        os.system('gvpack -u '+filename2+' '+filename1+' | dot -Tjpg -o'+filename3)
+
     def _check_transform(
         self,
         automaton: FiniteAutomaton,
@@ -16,17 +40,13 @@ class TestTransform(ABC, unittest.TestCase):
     ) -> None:
         """Test that the transformed automaton is as the expected one."""
         transformed = automaton.to_deterministic()
-
-        # # DEBUG PURPOSES
-        # with open('expected.txt', 'w') as file:
-        #     file.write(write_dot(expected))
-        # with open('result.txt', 'w') as file:
-        #     file.write(write_dot(transformed))
-
+        
         equiv_map = deterministic_automata_isomorphism(
             expected,
             transformed,
         )
+
+        self.dot(automaton, transformed)
 
         self.assertTrue(equiv_map is not None)
 

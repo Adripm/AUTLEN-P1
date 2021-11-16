@@ -229,11 +229,6 @@ class FiniteAutomaton(
                     if symbol not in symbols: # this may simplify unused symbols
                         symbols += (symbol, )
 
-        print('Initial state: ',initial_state)
-        print('States: ', states)
-        print('Symbols: ', symbols)
-        print('Transitions: ', transitions)
-
         return FiniteAutomaton(
             initial_state=initial_state,
             states=states,
