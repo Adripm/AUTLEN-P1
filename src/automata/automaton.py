@@ -141,6 +141,7 @@ class FiniteAutomaton(
 
         # Construir la tabla de transiciones
         transitions_table = {}
+        class_transitions_table = {} # used later
         for t in self.transitions:
             if t.initial_state not in transitions_table:
                 transitions_table[t.initial_state] = {}
@@ -154,7 +155,7 @@ class FiniteAutomaton(
             else:
                 eq[s] = 0
 
-        n_states = len(self.states)
+        class_indexes = {} # used later
 
         while True:
             # initialize new_eq
@@ -164,10 +165,12 @@ class FiniteAutomaton(
 
             # Identificar inicio de clase
             unique_eqclasses = list(set(eq.values())) # List of all uinque classes present in eq
+            next_class = len(unique_eqclasses)
             for s,cls in eq.items():
                 if cls in unique_eqclasses:
                     unique_eqclasses.remove(cls)
                     new_eq[s] = cls
+                    class_indexes[cls] = s
 
             # Calcular tabla de transiciones hacia clases
             class_transitions_table = {}
@@ -180,9 +183,26 @@ class FiniteAutomaton(
             for s,cls in new_eq.items():
                 if cls is None:
                     # check if remains in class
-                    pass # Continue here
+                    if class_transitions_table[s] == class_transitions_table[class_indexes[eq[s]]]:
+                        # remains in class
+                        new_eq[s] = eq[s]
+                    # else, does not remain in class
 
-            break # DEBUG DEBUG DEBUG
+            # next_class = len(unique_eqclasses)
+            while None in new_eq:
+                first = None
+                for s,cls in new_eq.items():
+                    if cls is None:
+                        if first is None:
+                            first = s
+                            new_eq[s] = next_class
+                        else:
+                            # compare with next_class
+                            if class_transitions_table[s] == class_transitions_table[first]:
+                                # same class
+                                new_eq[s] = next_class
+                            pass
+                next_class += 1
 
             if eq == new_eq:
                 break # break loop
@@ -190,11 +210,33 @@ class FiniteAutomaton(
                 eq = new_eq # continue
 
         # Clases de equivalencia completas
+        # Construir nuevo automata finito a partir de clase de equivalencia 'eq' y tabla 'class_transitions_table'
 
+        # simplificar clases fusionando estados que estén en la misma clase
+        # es decir, eliminar duplicados
+        for s in class_indexes.values():
+            states += (s,)
+
+        # set initial state
+        initial_state = class_indexes[eq[self.initial_state]]
+
+        # calculate transitions
+        for s,d in class_transitions_table.items():
+            if s in states:
+                for symbol, f in d.items():
+                    transitions += (Transition(initial_state=s, symbol=symbol, final_state=class_indexes[f]),)
+
+                    if symbol not in symbols: # this may simplify unused symbols
+                        symbols += (symbol, )
+
+        print('Initial state: ',initial_state)
+        print('States: ', states)
+        print('Symbols: ', symbols)
+        print('Transitions: ', transitions)
 
         return FiniteAutomaton(
-            initial_state=None,
-            states=None,
-            symbols=None,
-            transitions=None
+            initial_state=initial_state,
+            states=states,
+            symbols=symbols,
+            transitions=transitions
         )
